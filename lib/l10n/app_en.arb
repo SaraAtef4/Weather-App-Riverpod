@@ -1,0 +1,39 @@
+{
+    "@@locale": "en",
+
+  "searchCity": "Search city",
+  "humidity": "Humidity",
+  "wind": "Wind",
+  "maxTemp": "Max Temp",
+  "todayForecast": "Today's forecast",
+  "weeklyForecast": "Weekly forecast",
+  "next7DaysForecast": "Next 7 days forecast",
+  "previous7DaysForecast": "Previous 7 days forecast",
+  "discoverWeather": "Discover The\nWeather In Your City",
+  "splash": "Get to know your weather maps and\nradar precipitations forecast",
+  "start":  "Get Started",
+    "settings": "Settings",
+    "@settings": {
+      "description": "Label for the Settings screen/button."
+    },
+    "language": "Language",
+    "@language": {
+      "description": "Label for the language selection setting."
+    },
+    "theme": "Theme",
+    "@theme": {
+      "description": "Label for the theme selection setting."
+    },
+    "lightMode": "Light Mode",
+    "@lightMode": {
+      "description": "Label indicating the light theme is selected."
+    },
+    "darkMode": "Dark Mode",
+    "@darkMode": {
+      "description": "Label indicating the dark theme is selected."
+    },
+  "cityNotFound": "City not found or invalid. Please enter a valid city name",
+  "enterCityName": "Please enter a city name"
+
+  }
+  

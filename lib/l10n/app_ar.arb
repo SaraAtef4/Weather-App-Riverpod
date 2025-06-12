@@ -1,0 +1,40 @@
+{
+    "@@locale": "ar",
+  "searchCity": "ابحث عن مدينة",
+  "humidity": "الرطوبة",
+  "wind": "الرياح",
+  "maxTemp": "الحرارة القصوى",
+  "todayForecast": "توقعات اليوم",
+  "weeklyForecast": "توقعات الاسبوع",
+  "next7DaysForecast": "توقعات الأيام السبعة القادمة",
+  "previous7DaysForecast": "توقعات الأيام السبعة السابقة",
+  "discoverWeather": "اكتشف الطقس في\n مدينتك",
+  "splash": "تعرّف على خرائط الطقس وتوقعات هطول الأمطار بالرادار",
+  "start": "ابدأ الآن"
+,
+
+    "settings": "الإعدادات",
+    "@settings": {
+      "description": "Label for the Settings screen/button."
+    },
+    "language": "اللغة",
+    "@language": {
+      "description": "Label for the language selection setting."
+    },
+    "theme": "المظهر",
+    "@theme": {
+      "description": "Label for the theme selection setting."
+    },
+    "lightMode": "الوضع النهاري",
+    "@lightMode": {
+      "description": "Label indicating the light theme is selected."
+    },
+    "darkMode": "الوضع الليلي",
+    "@darkMode": {
+      "description": "Label indicating the dark theme is selected."
+    },
+  "cityNotFound": "لم يتم العثور على المدينة أو أنها غير صالحة. الرجاء إدخال اسم مدينة صحيح",
+  "enterCityName": "من فضلك أدخل اسم المدينة"
+
+}
+  
