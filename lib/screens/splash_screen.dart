@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../utils/app_colors.dart';
-import 'home_page/home_screen.dart';
+import 'home_screen.dart';
 import 'search_screen.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
