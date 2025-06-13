@@ -12,6 +12,14 @@
   "discoverWeather": "Discover The\nWeather In Your City",
   "splash": "Get to know your weather maps and\nradar precipitations forecast",
   "start":  "Get Started",
+  "currentLocation": "Current Location",
+  "locationPermissionsDenied": "Location permissions are denied",
+  "locationPermissionsPermanentlyDenied": "Location permissions are permanently denied",
+  "locationServicesDisabled": "Location services are disabled",
+  "unknownCity": "Unknown City",
+  "errorGettingLocation": "Error getting location",
+  "errorFetchingWeatherData": "Error fetching weather data",
+  "tryAgain": "Try Again",
     "settings": "Settings",
     "@settings": {
       "description": "Label for the Settings screen/button."

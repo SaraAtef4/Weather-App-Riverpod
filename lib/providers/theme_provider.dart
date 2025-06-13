@@ -8,7 +8,7 @@ class ThemeNotifier extends Notifier<ThemeMode> {
   @override
   ThemeMode build() {
     _loadThemeFromStorage();
-    return ThemeMode.light;
+    return ThemeMode.system; /// to detect current device mode
   }
 
   Future<void> _loadThemeFromStorage() async {

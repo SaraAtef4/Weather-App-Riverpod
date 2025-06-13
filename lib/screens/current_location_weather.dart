@@ -3,46 +3,130 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:weather_app_riverpod/screens/settings_screen.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:weather_app_riverpod/screens/weekly_forecast_screen.dart';
 import 'package:weather_app_riverpod/services/api_service.dart';
-class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key});
+
+class CurrentLocationWeatherScreen extends ConsumerStatefulWidget {
+  const CurrentLocationWeatherScreen({super.key});
 
   @override
-  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<CurrentLocationWeatherScreen> createState() =>
+      _LocationWeatherHomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _LocationWeatherHomeScreenState
+    extends ConsumerState<CurrentLocationWeatherScreen> {
   final _weatherService = WeatherApiService();
-  String city = 'Cairo';
+  String city = '';
   String country = '';
+  double? latitude;
+  double? longitude;
   Map<String, dynamic> currentValue = {};
   List<dynamic> hourly = [];
   List<dynamic> pastWeek = [];
   List<dynamic> next7days = [];
   bool isLoading = false;
+  bool isLocationEnabled = true;
+  String locationError = '';
+
   @override
   void initState() {
     super.initState();
-    _fetchWeather();
+    _getCurrentLocationAndWeather();
   }
 
-  Future<void> _fetchWeather() async {
+  Future<void> _getCurrentLocationAndWeather() async {
     setState(() {
       isLoading = true;
     });
+
     try {
-      final forecast = await _weatherService.getHourlyForecast(city);
-      final past = await _weatherService.getPastSevenDaysWeather(city);
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          setState(() {
+            locationError = 'Location permissions are denied';
+            isLocationEnabled = false;
+            isLoading = false;
+          });
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        setState(() {
+          locationError = 'Location permissions are permanently denied';
+          isLocationEnabled = false;
+          isLoading = false;
+        });
+        return;
+      }
+
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        setState(() {
+          locationError = 'Location services are disabled';
+          isLocationEnabled = false;
+          isLoading = false;
+        });
+        return;
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      latitude = position.latitude;
+      longitude = position.longitude;
+
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        city = place.locality ?? place.administrativeArea ?? 'Unknown City';
+        country = place.country ?? '';
+      }
+
+      await _fetchWeatherByCoordinates();
+    } catch (e) {
+      setState(() {
+        locationError = 'Error getting location: ${e.toString()}';
+        isLocationEnabled = false;
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _fetchWeatherByCoordinates() async {
+    if (latitude == null || longitude == null) {
+      return;
+    }
+
+    try {
+      final forecast = await _weatherService.getHourlyForecastByCoordinates(
+        latitude!,
+        longitude!,
+      );
+      final past = await _weatherService.getPast7DaysWeatherByCoordinates(
+        latitude!,
+        longitude!,
+      );
+
       setState(() {
         currentValue = forecast['current'] ?? {};
         hourly = forecast['forecast']?['forecastday']?[0]?['hour'] ?? [];
         next7days = forecast['forecast']?['forecastday'] ?? [];
         pastWeek = past;
         city = forecast['location']?['name'] ?? city;
-        country = forecast['location']?['country'] ?? '';
+        country = forecast['location']?['country'] ?? country;
         isLoading = false;
+        locationError = '';
       });
     } catch (e) {
       setState(() {
@@ -51,16 +135,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         pastWeek = [];
         next7days = [];
         isLoading = false;
+        locationError = 'Error fetching weather data';
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'City not found or invalid. Please enter a valid city name',
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error fetching weather data: ${e.toString()}'),
           ),
-        ),
-      );
+        );
+      }
     }
+  }
+
+  Future<void> _refreshWeather() async {
+    await _getCurrentLocationAndWeather();
   }
 
   String formateTime(String timeString) {
@@ -82,80 +171,79 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               fit: BoxFit.cover,
             )
             : SizedBox();
+
     if (localizations == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
+
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
       appBar: AppBar(
         backgroundColor: Theme.of(context).primaryColor,
-        actions: [
-          SizedBox(width: 25),
-          SizedBox(
-            width: 300,
-            height: 50,
-            child: TextField(
-              style: TextStyle(color: Theme.of(context).colorScheme.secondary),
-              onSubmitted: (value) {
-                if (value.trim().isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(localizations.enterCityName)),
-                  );
-                  return;
-                }
-                city = value.trim();
-                _fetchWeather();
-              },
-              decoration: InputDecoration(
-                labelText: localizations.searchCity,
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: Theme.of(context).colorScheme.surface,
-                ),
-                labelStyle: TextStyle(
-                  color: Theme.of(context).colorScheme.surface,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.surface,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.surface,
-                  ),
-                ),
+        title: Row(
+          children: [
+            Icon(
+              Icons.location_on,
+              color: Theme.of(context).colorScheme.secondary,
+            ),
+            SizedBox(width: 8),
+            Text(
+              localizations.currentLocation,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.secondary,
+                fontSize: 18,
               ),
             ),
-          ),
-          Spacer(),
+          ],
+        ),
+        actions: [
           IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => SettingScreen()),
-              );
-            },
+            onPressed: _refreshWeather,
             icon: Icon(
-              Icons.settings,
+              Icons.refresh,
               color: Theme.of(context).colorScheme.secondary,
             ),
           ),
-
           SizedBox(width: 10),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 20),
-            if (isLoading)
-              const Center(child: CircularProgressIndicator())
-            else ...[
-              if (currentValue.isNotEmpty)
+      body: RefreshIndicator(
+        onRefresh: _refreshWeather,
+        child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 20),
+              if (isLoading)
+                const Center(child: CircularProgressIndicator())
+              else if (!isLocationEnabled)
+                Center(
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.location_off,
+                        size: 100,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                      SizedBox(height: 20),
+                      Text(
+                        locationError,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: _getCurrentLocationAndWeather,
+                        child: Text('Try Again'),
+                      ),
+                    ],
+                  ),
+                )
+              else if (currentValue.isNotEmpty) ...[
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -170,6 +258,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         fontWeight: FontWeight.w400,
                       ),
                     ),
+
+                    SizedBox(height: 10),
                     Text(
                       '${currentValue['temp_c']}°C',
                       style: TextStyle(
@@ -186,6 +276,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                     imageWidgets,
+
                     Padding(
                       padding: EdgeInsets.all(15),
                       child: Container(
@@ -286,6 +377,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                     SizedBox(height: 15),
+
                     Container(
                       height: 250,
                       width: double.maxFinite,
@@ -421,8 +513,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ],
                 ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

@@ -12,8 +12,17 @@
   "splash": "تعرّف على خرائط الطقس وتوقعات هطول الأمطار بالرادار",
   "start": "ابدأ الآن"
 ,
+  "currentLocation": "الموقع الحالي",
+  "locationPermissionsDenied": "تم رفض أذونات الموقع",
+  "locationPermissionsPermanentlyDenied": "تم رفض أذونات الموقع بشكل دائم",
+  "locationServicesDisabled": "خدمات الموقع غير مفعّلة",
+  "unknownCity": "مدينة غير معروفة",
+  "errorGettingLocation": "حدث خطأ أثناء الحصول على الموقع",
+  "errorFetchingWeatherData": "حدث خطأ أثناء جلب بيانات الطقس",
+  "tryAgain": "حاول مرة أخرى",
 
-    "settings": "الإعدادات",
+
+  "settings": "الإعدادات",
     "@settings": {
       "description": "Label for the Settings screen/button."
     },
